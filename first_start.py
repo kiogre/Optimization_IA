@@ -36,11 +36,6 @@ FEATURES = ["diff", "mob", "omob", "corner", "xsq", "empt", "cdiff"]
 N_FEAT = len(FEATURES)
 
 
-def _move_bit(move):
-    """Return the uint64 bit corresponding to a square index."""
-    return np.uint64(1) << np.uint64(move)
-
-
 def features(board, pid, moves):
     """Build one feature row per candidate move, evaluated after that move."""
     result = np.zeros((len(moves), N_FEAT), dtype=np.float64)
@@ -102,13 +97,18 @@ class GPAgent(Agent):
         return GPAgent(self.gp_function)
 
 
-def play(func, agent_id, seed, n_open=4):
+def play(func, agent_id):
     gp_agent = GPAgent(func)
     random_agent = RandomAgent()
 
-    winner = OthelloSimulation.simulate_game(
-        (gp_agent, random_agent)
-    )
+    if agent_id == 1:
+        winner = OthelloSimulation.simulate_game(
+            (gp_agent, random_agent)
+        )
+    else:
+        winner = OthelloSimulation.simulate_game(
+            (random_agent, gp_agent)
+        )
 
     if winner == gp_agent.id:
         return 1.0
@@ -182,8 +182,8 @@ def win_rate(individual, seeds):
 
     for seed in seeds:
         seed = int(seed)
-        total += play(func, 1, seed)
-        total += play(func, 2, seed)
+        total += play(func, 1)
+        total += play(func, 2)
 
     return total / (2 * len(seeds))
 
