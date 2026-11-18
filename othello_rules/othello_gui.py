@@ -18,7 +18,7 @@ import pygame
 from pygame import gfxdraw
 from numba import uint64
 
-from agents import Player, HumanPlayer, RandomAgent
+from .agents import Player, HumanPlayer, RandomAgent
 
 class OthelloGui:
     """
@@ -58,14 +58,15 @@ class OthelloGui:
         self.font = pygame.font.SysFont(None, 40)
         
         # Load and scale images
-        raw_black_piece_img = pygame.image.load("ressources/black_piece.png")
-        raw_white_piece_img = pygame.image.load("ressources/white_piece.png")
+        raw_black_piece_img = pygame.image.load("/home/koro/Scrivania/Optimization_IA/othello_rules/black_piece.png")
+        raw_white_piece_img = pygame.image.load("/home/koro/Scrivania/Optimization_IA/othello_rules/white_piece.png")
         
         self.black_piece_img = pygame.transform.smoothscale(raw_black_piece_img, (CELL_SIZE*CELL_SCALLING, CELL_SIZE*CELL_SCALLING))
         self.white_piece_img = pygame.transform.smoothscale(raw_white_piece_img, (CELL_SIZE*CELL_SCALLING, CELL_SIZE*CELL_SCALLING))
         
-        self.valid_black_piece_img = pygame.transform.smoothscale(raw_black_piece_img, (CELL_SIZE*CELL_SCALLING/2, CELL_SIZE*CELL_SCALLING/2))
-        self.valid_white_piece_img = pygame.transform.smoothscale(raw_white_piece_img, (CELL_SIZE*CELL_SCALLING/2, CELL_SIZE*CELL_SCALLING/2))
+        valid_size = int(CELL_SIZE * 0.4)
+        self.valid_black_piece_img = pygame.transform.smoothscale(raw_black_piece_img, (valid_size, valid_size))
+        self.valid_white_piece_img = pygame.transform.smoothscale(raw_white_piece_img, (valid_size, valid_size))
         
     def draw_circle(self, color, coords, radius):
         """
@@ -116,17 +117,26 @@ class OthelloGui:
         
         offset_v_pct = (1-CELL_SCALLING/2)/2
                     
-        # Display valid moves
-        for move in self.game.current_player_moves:
-            row, col = divmod(move, 8)
-            if self.game.current_player.id == 1:
-                self.screen.blit(self.valid_black_piece_img, (col * CELL_SIZE + offset_v_pct*CELL_SIZE , row * CELL_SIZE + offset_v_pct*CELL_SIZE))
-            else:
-                self.screen.blit(self.valid_white_piece_img, (col * CELL_SIZE + offset_v_pct*CELL_SIZE , row * CELL_SIZE + offset_v_pct*CELL_SIZE))
+        # Fattore di scala per le mosse valide (metà della cella: 0.4)
+        VALID_SCALE = 0.4 
+        offset_v_pct = (1.0 - VALID_SCALE) / 2.0
+                    
+        # Display valid moves (con controllo di validità dell'indice)
+        moves = self.game.current_player_moves
+        if moves is not None and len(moves) > 0:
+            for move in moves:
+                move_int = int(move)
+                if 0 <= move_int < 64:
+                    row, col = divmod(move_int, 8)
+                    if self.game.current_player.id == 1:
+                        self.screen.blit(self.valid_black_piece_img, (col * CELL_SIZE + offset_v_pct * CELL_SIZE, row * CELL_SIZE + offset_v_pct * CELL_SIZE))
+                    else:
+                        self.screen.blit(self.valid_white_piece_img, (col * CELL_SIZE + offset_v_pct * CELL_SIZE, row * CELL_SIZE + offset_v_pct * CELL_SIZE))
                 
-        # Display last move
-        row, col = divmod(self.last_move, 8)
-        self.draw_circle(RED, (int((col+(1/2)) * CELL_SIZE), int((row+(1/2)) * CELL_SIZE)), 7)
+        # Display last move (disegnato solo se c'è stata una mossa effettiva)
+        if self.last_move != -1 and 0 <= self.last_move < 64:
+            row, col = divmod(self.last_move, 8)
+            self.draw_circle(RED, (int((col + 0.5) * CELL_SIZE), int((row + 0.5) * CELL_SIZE)), 7)
         
     def display_winner(self):
         """

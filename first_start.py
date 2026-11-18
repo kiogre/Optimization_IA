@@ -13,7 +13,7 @@ import random
 import numpy as np
 from deap import algorithms, base, creator, gp, tools
 
-from othello_rules.agents import Agent, RandomAgent
+from othello_rules.agents import Agent, RandomAgent, HumanPlayer
 from othello_rules.othello_simulations import OthelloSimulation
 
 from othello_rules.bitboard_utils import (
@@ -23,6 +23,8 @@ from othello_rules.bitboard_utils import (
     possible_moves,
     get_moves_index,
 )
+
+from othello_rules.othello_gui import OthelloGui
 
 
 # GP features
@@ -277,6 +279,8 @@ def main():
             pool.close()
             pool.join()
 
+    gui = OthelloGui(player1=GPAgent(toolbox.compile(expr=best)), player2=HumanPlayer())
+    gui.run_game()
 
 if __name__ == "__main__":
     main()
