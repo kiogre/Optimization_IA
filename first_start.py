@@ -9,13 +9,13 @@ import functools
 import multiprocessing
 import operator
 import random
+import pickle
 
 import numpy as np
 from deap import algorithms, base, creator, gp, tools
 
 from othello_rules.agents import Agent, RandomAgent, HumanPlayer
 from othello_rules.othello_simulations import OthelloSimulation
-
 from othello_rules.bitboard_utils import (
     count_bits,
     get_player_board,
@@ -23,7 +23,6 @@ from othello_rules.bitboard_utils import (
     possible_moves,
     get_moves_index,
 )
-
 from othello_rules.othello_gui import OthelloGui
 
 
@@ -279,8 +278,21 @@ def main():
             pool.close()
             pool.join()
 
+    with open("best_individual_normal_GP.pkl", "wb") as f:
+        pickle.dump(best, f)
+
     gui = OthelloGui(player1=GPAgent(toolbox.compile(expr=best)), player2=HumanPlayer())
     gui.run_game()
 
 if __name__ == "__main__":
-    main()
+    # main()
+    pickle_file = "best_individual_normal_GP.pkl"
+    with open(pickle_file, "rb") as f:
+        best = pickle.load(f)
+
+    pickle_file = "best_individual_Nash_GP.pkl"
+    with open(pickle_file, "rb") as f:
+        best_2 = pickle.load(f)
+
+    gui = OthelloGui(player1=GPAgent(toolbox.compile(expr=best)), player2=GPAgent(toolbox.compile(expr=best_2)))
+    gui.run_game()
